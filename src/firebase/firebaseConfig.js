@@ -11,9 +11,7 @@ const firebaseConfig = {
   measurementId: "G-9N1TX3JN5K"
 };
 
-// Inicializa Firebase
 const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-// Firestore (BASE DE DATOS)
-export const db = getFirestore(app);
-
+export { db };

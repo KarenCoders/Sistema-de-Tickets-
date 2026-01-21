@@ -1,32 +1,35 @@
 import {
   collection,
-  addDoc,
   getDocs,
+  addDoc,
   doc,
-  deleteDoc,
   updateDoc
 } from "firebase/firestore";
-
-import { db } from "../firebase/config";
+import { db } from "../firebase/firebaseConfig.js";
 
 const ticketsRef = collection(db, "tickets");
 
-export const getTickets = async () => {
+export const getTicketsFromDB = async () => {
   const snapshot = await getDocs(ticketsRef);
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
+  return snapshot.docs.map(d => ({
+    id: d.id,
+    ...d.data()
   }));
 };
 
-export const addTicketDB = async (ticket) => {
-  await addDoc(ticketsRef, ticket);
+export const addTicketToDB = async (ticket) => {
+  await addDoc(ticketsRef, {
+    ...ticket,
+    status: "Abierto"
+  });
 };
 
-export const deleteTicketDB = async (id) => {
-  await deleteDoc(doc(db, "tickets", id));
-};
+export const toggleTicketStatusInDB = async (id, currentStatus) => {
+  const newStatus =
+    currentStatus === "Abierto" ? "Resuelto" : "Abierto";
 
-export const updateTicketDB = async (id, data) => {
-  await updateDoc(doc(db, "tickets", id), data);
+  const ticketDoc = doc(db, "tickets", id);
+  await updateDoc(ticketDoc, { status: newStatus });
+
+  return newStatus;
 };

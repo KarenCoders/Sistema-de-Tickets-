@@ -1,60 +1,19 @@
-import { useEffect, useState } from "react";
 import {
-  PlusCircle,
   AlertCircle,
   Settings,
   CheckCircle2,
   Trash2
 } from "lucide-react";
-import {
-  getTickets,
-  addTicketDB,
-  deleteTicketDB,
-  updateTicketDB
-} from "../services/ticketsService";
+import useTickets from "../hooks/useTickets";
 
-const Dashboard = () => {
-  const [tickets, setTickets] = useState([]);
-  const [newTicket, setNewTicket] = useState({
-    title: "",
-    type: "Correctivo",
-    priority: "Media"
-  });
+const DashboardSection = ({ activeTab }) => {
+  const { tickets, toggleStatus } = useTickets();
 
-  useEffect(() => {
-    getTickets().then(setTickets);
-  }, []);
-
-  const addTicket = async () => {
-    if (!newTicket.title) return;
-
-    await addTicketDB({
-      ...newTicket,
-      status: "Abierto",
-      date: new Date().toLocaleDateString()
-    });
-
-    getTickets().then(setTickets);
-    setNewTicket({ title: "", type: "Correctivo", priority: "Media" });
-  };
-
-  const toggleStatus = async (ticket) => {
-    const status =
-      ticket.status === "Abierto" ? "Resuelto" : "Abierto";
-
-    await updateTicketDB(ticket.id, { status });
-    getTickets().then(setTickets);
-  };
-
-  const deleteTicket = async (id) => {
-    await deleteTicketDB(id);
-    setTickets(tickets.filter(t => t.id !== id));
-  };
+  if (activeTab !== "dashboard") return null;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-
-      {/* HEADER */}
+      {/* Header */}
       <div className="flex justify-between items-end">
         <div>
           <h2 className="text-3xl font-bold">
@@ -66,7 +25,7 @@ const Dashboard = () => {
         </div>
 
         <div className="flex gap-4 text-center">
-          <div className="bg-white px-4 py-2 rounded-xl border shadow-sm">
+          <div className="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
             <p className="text-xs font-bold text-slate-400 uppercase">
               Total
             </p>
@@ -75,7 +34,7 @@ const Dashboard = () => {
             </p>
           </div>
 
-          <div className="bg-white px-4 py-2 rounded-xl border shadow-sm">
+          <div className="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
             <p className="text-xs font-bold text-slate-400 uppercase">
               Abiertos
             </p>
@@ -86,72 +45,23 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* NUEVO TICKET */}
-      <div className="bg-white p-6 rounded-2xl border shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-        <div className="md:col-span-2 space-y-2">
-          <label className="text-sm font-bold text-slate-600">
-            Descripción del Cambio / Error
-          </label>
-          <input
-            type="text"
-            placeholder="Ej: Error 404 al iniciar sesión..."
-            className="w-full p-3 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-            value={newTicket.title}
-            onChange={(e) =>
-              setNewTicket({
-                ...newTicket,
-                title: e.target.value
-              })
-            }
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-600">
-            Tipo
-          </label>
-          <select
-            className="w-full p-3 bg-slate-50 border rounded-xl"
-            value={newTicket.type}
-            onChange={(e) =>
-              setNewTicket({
-                ...newTicket,
-                type: e.target.value
-              })
-            }
-          >
-            <option>Correctivo</option>
-            <option>Adaptativo</option>
-            <option>Perfectivo</option>
-            <option>Preventivo</option>
-          </select>
-        </div>
-
-        <button
-          onClick={addTicket}
-          className="bg-blue-600 hover:bg-blue-700 text-white h-[50px] rounded-xl font-bold flex items-center justify-center gap-2 shadow-md"
-        >
-          <PlusCircle size={20} />
-          Crear Ticket
-        </button>
-      </div>
-
-      {/* LISTA DE TICKETS */}
+      {/* Lista de Tickets */}
       <div className="grid grid-cols-1 gap-4">
         {tickets.length === 0 ? (
-          <div className="bg-white border-2 border-dashed rounded-2xl py-20 text-center text-slate-400">
+          <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl py-20 text-center text-slate-400">
             El backlog está vacío. ¡Buen trabajo!
           </div>
         ) : (
           tickets.map(ticket => (
             <div
               key={ticket.id}
-              className={`bg-white p-5 rounded-2xl border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
+              className={`group bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
                 ticket.status === "Resuelto"
                   ? "opacity-60 grayscale"
                   : ""
               }`}
             >
+              {/* Info */}
               <div className="flex items-center gap-4">
                 <div
                   className={`p-3 rounded-full ${
@@ -192,10 +102,13 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Acciones */}
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => toggleStatus(ticket)}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-all ${
+                  onClick={() =>
+                    toggleStatus(ticket.id, ticket.status)
+                  }
+                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${
                     ticket.status === "Abierto"
                       ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -208,8 +121,8 @@ const Dashboard = () => {
                 </button>
 
                 <button
-                  onClick={() => deleteTicket(ticket.id)}
                   className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                  disabled
                 >
                   <Trash2 size={18} />
                 </button>
@@ -218,9 +131,8 @@ const Dashboard = () => {
           ))
         )}
       </div>
-
     </div>
   );
 };
 
-export default Dashboard;
+export default DashboardSection;
